@@ -26,7 +26,6 @@ const float BATT_LOW     = 9.0;
 const int PWM_PIN  = 9;
 // Duty cycle 0–255 mapped to Timer1 range 0–319
 // D = Vbat / Vmpp = 11.1 / 17.2 = 0.645 → start at 64.5%
-// Use nominal battery (11.1V) for starting duty — safer
 const int DUTY_START = 164;  // 164/255 = 64.3% ≈ 11.1V/17.2V
 const int DUTY_MIN   = 51;   // 20% floor — protects inductor
 const int DUTY_MAX   = 230;  // 90% ceiling — keeps diode time
@@ -50,12 +49,12 @@ float prevPower     = 0.0;
 int   prevDuty      = DUTY_START;
 int   direction     = 1;     // +1 increase duty, -1 decrease
 
-bool  charging      = true;  // false when battery full or low panel
+bool  charging = true;  // false when battery full or low panel
 
-unsigned long lastMpptTime    = 0;
-unsigned long lastLogTime     = 0;
+unsigned long lastMpptTime   = 0;
+unsigned long lastLogTime   = 0;
 unsigned long lastDisplayTime = 0;
-bool          headerPrinted   = false;
+bool headerPrinted = false;
 
 
 void setup() {
@@ -64,7 +63,6 @@ void setup() {
 
   // INA219
   if (!ina219.begin()) {
-    // Halt with error — check wiring if this triggers
     while (1) {
       if (Serial) Serial.println("ERROR: INA219 not found. Check wiring.");
       delay(1000);
@@ -72,7 +70,6 @@ void setup() {
   }
   
   // This sets internal gain for max 400mA and 16V bus voltage
-  // Our panel peaks at 0.31A — fits perfectly
   ina219.setCalibration_16V_400mA();
 
   // LCD
@@ -85,7 +82,7 @@ void setup() {
   delay(1200);
   lcd.clear();
 
-  // PWM — reconfigure Timer1 to 50kHz
+  // PWM 
   setupPWM();
 
   // Print CSV header ( PC logging)
@@ -94,7 +91,7 @@ void setup() {
 
 
   pinMode(PWM_PIN, OUTPUT);
-  // Fast PWM, no prescaler → 16MHz / 320 = 50kHz
+  // Fast PWM, no prescaler ,16MHz / 320 = 50kHz
   TCCR1A = _BV(COM1A1) | _BV(WGM11);
   TCCR1B = _BV(WGM13) | _BV(WGM12) | _BV(CS10);
   ICR1   = 319;
@@ -123,8 +120,6 @@ void readSensors() {
   panelVoltage = adcV * DIVIDER_RATIO;
 
   // Panel current via INA219 + shunt correction
-  // INA219 internally assumes 0.1Ω shunt
-  // We have 0.5Ω → scale by 0.2
   float rawmA = ina219.getCurrent_mA();
   panelCurrent = max(0.0, rawmA / 1000.0);
 
@@ -141,16 +136,12 @@ void readSensors() {
   lastMpptTime = now;
 
   readSensors();
-
-  // Safety checks first — always
   if (battVoltage >= BATT_FULL) {
-    // Battery full — stop charging, set minimum duty
     setDuty(DUTY_MIN);
     charging = false;
     return;
   }
   if (panelVoltage < 10.0) {
-    // Panel too weak (night / deep shade) — stop
     setDuty(DUTY_MIN);
     charging = false;
     return;
@@ -162,7 +153,7 @@ void readSensors() {
   if (esp32Available && esp32Duty > 0) {
     int mlDuty = (int)((esp32Duty / 100.0) * 255.0);
     setDuty(mlDuty);
-    esp32Available = false;  // consume suggestion, wait for next
+    esp32Available = false;  
     prevPower = panelPower;
     prevDuty  = dutyCycle;
     return;
@@ -172,16 +163,16 @@ void readSensors() {
   float dP = panelPower - prevPower;
   int   dD = dutyCycle  - prevDuty;
 
-  if (abs(dP) > 0.005) {  // ignore changes < 5mW (noise floor)
+  if (abs(dP) > 0.005) {  
     if (dP > 0) {
-      // Power went up — keep same direction
+      // Power went up , keep same direction
       direction = (dD >= 0) ? 1 : -1;
     } else {
-      // Power went down — reverse direction
+      // Power went down , reverse direction
       direction = (dD >= 0) ? -1 : 1;
     }
   }
-  // If dP ≈ 0 we're near MPP — keep oscillating with tiny step
+  // If dP ≈ 0 we're near MPP 
 
   prevPower = panelPower;
   prevDuty  = dutyCycle;
@@ -218,7 +209,7 @@ void uartReceive() {
     line.trim();
     if (line.length() > 0 && line.length() < 8) {
       float d = line.toFloat();
-      if (d >= 20.0 && d <= 90.0) {  // sanity check
+      if (d >= 20.0 && d <= 90.0) { 
         esp32Duty      = d;
         esp32Available = true;
       }
@@ -262,10 +253,9 @@ void updateDisplay() {
     return;
   }
 
-  // Normal operating screen — row 0
+  
   lcd.setCursor(0, 0);
   lcd.print("V:");
-  // Print voltage with 1 decimal, right-pad to keep columns stable
   String vStr = String(panelVoltage, 1);
   lcd.print(vStr);
   lcd.print(" I:");
