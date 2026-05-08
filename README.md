@@ -91,25 +91,6 @@ MOSFET Vds rating:    ≥ 1.5 × Voc = 34.5V  →  IRLZ44N 55V ✓
 Diode reverse V:      ≥ 1.5 × Voc = 34.5V  →  1N5822 40V  ✓
 ```
 
-### Sensing circuit
-
-Two independent measurements feed the MPPT algorithm:
-
-```
-Current (INA219):
-  Panel+ ──[0.5Ω shunt]── Node A
-            ↑              ↑
-         INA219 Vin+    INA219 Vin-
-  Measures voltage drop across shunt → I = V/R
-  Calibrated: actual_mA = ina219.getCurrent_mA() × (0.1/0.5)
-
-Voltage (divider):
-  Node A ──[18kΩ]──●──[3.9kΩ]── GND
-                   │
-                Arduino A0
-  Scale factor = (18000+3900)/3900 = 5.615
-  panelVoltage = analogRead(A0) × (5.0/1023) × 5.615
-```
 
 ---
 
