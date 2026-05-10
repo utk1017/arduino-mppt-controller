@@ -255,32 +255,18 @@ Open `mpptpo.ino` in Arduino IDE and upload to Arduino Nano.
 Connect the circuit as shown in the schematic before powering the system.
 
 ---
+## Repository Structure
 
-## Repository structure
-
-```
+```text
 mppt-solar-controller/
 │
-├── nano_main/
-│   └── nano_main.ino          # Arduino Nano firmware (Phase 1 complete)
-│
-├── esp32_main/
-│   ├── esp32_main.ino         # ESP32 firmware (Phase 2 in progress)
-│   └── model_data.h           # TFLite model placeholder
-│
-├── training/
-│   └── train_model.py         # Python script to train TinyML model
-│
-├── docs/
-│   ├── circuit_breadboard.png # Breadboard layout diagram
-│   ├── circuit_perfboard.png  # Perf board layout diagram
-│   └── schematic.png          # Full circuit schematic
-│
-├── data/
-│   └── sample_log.csv         # Sample logged data from Phase 1
-│
-└── README.md
+├── images/
+├── README.md
+└── mppt_controller.ino
 ```
+
+
+
 
 ---
 
@@ -296,29 +282,7 @@ This project covers several interconnected concepts in power electronics and emb
 
 **Why dual-chip (Nano + ESP32)?** The Nano handles real-time PWM control — a 100ms deterministic loop that must never stall. The ESP32 runs WiFi and TFLite inference, both of which can take unpredictable amounts of time. Mixing them on one chip risks the WiFi stack stalling the PWM loop. Separation gives each chip one job it does reliably.
 
----
 
-## SDG alignment
-
-This project contributes to three UN Sustainable Development Goals:
-
-**SDG 7 — Affordable and Clean Energy:** MPPT extracts ~19% more power from the same panel vs direct connection. At under ₹3,000, this controller makes efficient solar charging accessible where ₹5,000+ commercial units are not.
-
-**SDG 13 — Climate Action:** A 5W panel at 87% MPPT efficiency vs 68% baseline generates ~12 Wh extra per day. At India's grid carbon intensity (0.71 kg CO2/kWh), this avoids ~3 kg CO2 per panel per year.
-
-**SDG 9 — Industry, Innovation and Infrastructure:** Combining embedded ML with power electronics at sub-₹3,000 cost demonstrates frugal innovation for resource-constrained deployment contexts.
-
----
-
-## About
-
-Built as a college electronics project (2nd year, B.E. Electronics). Phase 1 implemented and tested on real hardware. Phase 2 (TinyML) actively in development.
-
-**Skills demonstrated:** Power electronics design, embedded C++ firmware, I2C/UART protocols, analog sensing, PCB layout (perf board), Python ML pipeline, TensorFlow Lite, system architecture.
-
-**Open to:** Internship opportunities in embedded systems, power electronics, IoT, or renewable energy. Feel free to reach out or open an issue if you have questions about the design.
-
----
 
 ## License
 
