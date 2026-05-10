@@ -148,6 +148,25 @@ LiquidCrystal I2C       — by Frank de Brabander, Library Manager
 ```
 
 ---
+## Hardware Implementation
+
+### Final Hardware Setup
+
+![Hardware Setup](images/hardware_setup.jpeg)
+
+---
+
+### Outdoor Testing
+
+![Outdoor Testing](images/outdoor_testing.jpeg)
+
+---
+
+### Live System Monitoring
+
+![LCD Output](images/lcd_output.jpeg)
+
+---
 
 ## Results
 
@@ -169,12 +188,22 @@ LiquidCrystal I2C       — by Frank de Brabander, Library Manager
 
 > **Note:** MPPT efficiency = P_operating / P_mpp × 100%. Measured by sweeping duty cycle manually to find true P_mpp, then comparing to P&O tracking value.
 
-### LCD display output 
+### LCD display output
+#### Peak
 
 ```
 V:17.1 I:0.28A
 P:4.79W D:64.9%
 ```
+
+#### Under low sunlight(pic)
+
+```
+V:10.1 I:0.17A
+P:1.69W D:28%
+```
+
+
 
 ### Serial CSV output (for data logging / ESP32)
 
@@ -184,6 +213,12 @@ time_ms,volt_V,curr_A,power_W,duty_pct,batt_V,source
 1274,17.128,0.2798,4.791,65.10,11.24,PO
 1524,17.141,0.2804,4.806,64.90,11.25,PO
 ```
+
+---
+
+## Demo Video
+
+[Watch the Project Demo](https://drive.google.com/file/d/18u_rQ1YWbrDCllMi7uZgHuIx8xsN6jN5/view?usp=sharing)
 
 ---
 
@@ -209,76 +244,15 @@ time_ms,volt_V,curr_A,power_W,duty_pct,batt_V,source
 
 ## Getting Started
 
-### Hardware assembly order
+### Required Libraries
+- Adafruit INA219
+- LiquidCrystal I2C
 
-> Build and verify in this exact order. Never solder until the previous stage is breadboard-verified.
+### Open Firmware
+Open `mpptpo.ino` in Arduino IDE and upload to Arduino Nano.
 
-**Stage 1 — Sensing (verify on breadboard first)**
-1. Connect INA219: VCC→5V, GND→GND, SDA→A4, SCL→A5
-2. Place 0.5Ω shunt (two 1Ω in parallel) in series on panel+ line
-3. Connect INA219 Vin+ before shunt, Vin- after shunt (Node A)
-4. Connect voltage divider: R1=18kΩ from Node A, R2=3.9kΩ to GND, midpoint→A0
-5. Add 100nF ceramic cap from A0 midpoint to GND (noise filter)
-6. Upload sensor test sketch, verify readings on Serial Monitor
-
-**Stage 2 — Display**
-1. Connect LCD I2C adapter: VCC→5V, GND→GND, SDA→A4, SCL→A5
-2. If LCD address is 0x3F change `lcd(0x27,...)` to `lcd(0x3F,...)`
-3. Verify LCD shows test message on startup
-
-**Stage 3 — Power stage (add last, after sensing verified)**
-1. Connect IRLZ44N: Gate→D9 via 10Ω, Drain→Node A, Source→inductor pin 1
-2. Connect 100µH inductor: pin 1→MOSFET Source, pin 2→Node B
-3. Connect 1N5822: cathode→Node B, anode→GND (stripe = cathode)
-4. Connect 100µF cap: positive→Node B, negative→GND (check polarity!)
-5. Connect input caps: 100µF and 100nF both from Node A to GND
-6. Verify no shorts with multimeter before connecting panel
-7. Connect panel and battery, verify LCD shows voltage and duty cycling
-
-### Software setup
-
-```bash
-# Clone repository
-git clone https://github.com/YOUR_USERNAME/mppt-solar-controller.git
-cd mppt-solar-controller
-
-# Open in Arduino IDE
-# File → Open → nano_main/nano_main.ino
-```
-
-Install libraries via Arduino Library Manager:
-- `Adafruit INA219`
-- `LiquidCrystal I2C` (by Frank de Brabander)
-
-Update these constants in `nano_main.ino` to match your components:
-
-```cpp
-// Voltage divider — change if using different resistors
-const float R1 = 18000.0;   // top resistor in ohms
-const float R2 = 3900.0;    // bottom resistor in ohms
-
-// Shunt — change if using different resistance
-const float SHUNT_OHMS = 0.5;  // 0.5 for 2×1Ω parallel, 1.0 for single 1Ω
-
-// Battery — change for your chemistry
-const float BATT_FULL = 12.6;  // 3S Li-ion | use 14.4 for 12V SLA
-const float BATT_LOW  = 9.0;   // 3S Li-ion | use 11.0 for 12V SLA
-
-// LCD address — try 0x3F if display blank
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-```
-
-### Troubleshooting
-
-| Symptom | Likely cause | Fix |
-|---------|-------------|-----|
-| INA219 not found on startup | Wrong I2C address or wiring | Check SDA/SCL, try address 0x41 |
-| LCD blank | Wrong I2C address | Change 0x27 to 0x3F in code |
-| Voltage reads ~5× too high | Wrong DIVIDER_RATIO | Recalculate: (R1+R2)/R2 |
-| Current reads ~5× too high | SHUNT_CORRECTION wrong | Set SHUNT_OHMS = your actual resistance |
-| Duty cycle oscillates wildly | Noise on INA219 readings | Add input caps, check power loop layout |
-| MOSFET gets hot | No heat sink or poor gate drive | Clip-on TO-220 heat sink, verify 5V on gate |
-| Battery not charging | Duty cycle too low or cutoff triggered | Check BATT_FULL constant vs actual battery V |
+### Hardware
+Connect the circuit as shown in the schematic before powering the system.
 
 ---
 
