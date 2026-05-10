@@ -184,7 +184,6 @@ LiquidCrystal I2C       — by Frank de Brabander, Library Manager
 | Duty cycle at MPP | 64.9% |
 | INA219 current resolution (0.5Ω shunt) | 0.1 mA |
 | Switching frequency | 50 kHz |
-| Total component cost | ₹2,827 |
 
 > **Note:** MPPT efficiency = P_operating / P_mpp × 100%. Measured by sweeping duty cycle manually to find true P_mpp, then comparing to P&O tracking value.
 
@@ -265,28 +264,6 @@ mppt-solar-controller/
 └── mppt_controller.ino
 ```
 
-
-
-
----
-
-## Theory background
-
-This project covers several interconnected concepts in power electronics and embedded ML. Brief explanations for each:
-
-**Why MPPT?** A solar panel's output is not fixed. Its I-V curve shifts with irradiance and temperature, and the maximum power point moves continuously. A fixed resistive load will only hit the MPP by coincidence. MPPT dynamically adjusts the load impedance to always extract peak power.
-
-**Why a buck converter?** The battery (11.1V) is at a different voltage than the panel MPP (17.2V). Connecting directly forces the panel to operate at battery voltage — away from its MPP. The buck converter decouples the two sides, letting the panel run at 17.2V while the battery sees 11.1V. Efficiency is ~90% vs ~0% for a linear regulator.
-
-**Why TinyML over P&O?** P&O hill-climbs blindly — it perturbs, measures, and reverses if power drops. It never truly settles (±1 step oscillation around MPP) and gets confused during rapid irradiance changes. A neural network trained on historical data predicts the optimal duty cycle directly — no oscillation, instant response to changing conditions.
-
-**Why dual-chip (Nano + ESP32)?** The Nano handles real-time PWM control — a 100ms deterministic loop that must never stall. The ESP32 runs WiFi and TFLite inference, both of which can take unpredictable amounts of time. Mixing them on one chip risks the WiFi stack stalling the PWM loop. Separation gives each chip one job it does reliably.
-
-
-
-## License
-
-MIT License — see [LICENSE](LICENSE) for details. Use freely, attribution appreciated.
 
 ---
 
