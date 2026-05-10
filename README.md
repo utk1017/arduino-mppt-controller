@@ -169,7 +169,7 @@ LiquidCrystal I2C       — by Frank de Brabander, Library Manager
 
 > **Note:** MPPT efficiency = P_operating / P_mpp × 100%. Measured by sweeping duty cycle manually to find true P_mpp, then comparing to P&O tracking value.
 
-### LCD display output (live)
+### LCD display output 
 
 ```
 V:17.1 I:0.28A
@@ -189,27 +189,20 @@ time_ms,volt_V,curr_A,power_W,duty_pct,batt_V,source
 
 ## Roadmap
 
-### Phase 1 — P&O MPPT ✅ Complete
+### Phase 1 — Complete 
+- [x] Buck converter hardware
+- [x] P&O MPPT implementation
+- [x] INA219 sensing
+- [x] 50kHz PWM generation
+- [x] LCD monitoring
+- [x] CSV serial logging
 
-- [x] Buck converter hardware (IRLZ44N + 100µH + 1N5822 + 100µF)
-- [x] INA219 current sensing with 0.5Ω shunt correction
-- [x] Voltage divider (20kΩ + 4.7kΩ) with 5V ADC safety margin
-- [x] 50kHz PWM via Timer1 reconfiguration
-- [x] Non-blocking P&O MPPT algorithm (100ms loop)
-- [x] 16×2 LCD I2C display with live V/I/P/duty readout
-- [x] 3S Li-ion battery protection (12.6V cutoff, 9.0V low)
-- [x] CSV data logging over serial (training data for Phase 2)
-
-### Phase 2 — TinyML Integration 🔄 In Progress
-
-- [ ] Collect 10,000+ rows of varied training data (different weather, times of day)
-- [ ] Train MLP model in Python / Google Colab (2 inputs: V, I → 1 output: duty%)
-- [ ] Convert to TFLite int8 quantised model using TFLite converter
-- [ ] Deploy TFLite Micro on ESP32 (520KB RAM — sufficient for small MLP)
-- [ ] UART communication: Nano → ESP32 (sensor CSV), ESP32 → Nano (duty float)
-- [ ] Level shift circuit: Nano TX 5V → ESP32 RX 3.3V (10kΩ + 4.7kΩ divider)
-- [ ] A/B efficiency comparison: P&O vs TinyML under same conditions
-- [ ] Live WiFi dashboard (ESP32 AP mode, accessible from any browser)
+### Phase 2 — In Progress 
+- [ ] Collect operating data
+- [ ] Train TinyML model
+- [ ] Deploy inference on ESP32
+- [ ] Compare TinyML vs P&O efficiency
+- [ ] Add WiFi dashboard
 
 
 ---
