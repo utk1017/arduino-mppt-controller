@@ -46,20 +46,20 @@ This project combines power electronics, embedded systems, and TinyML for low-co
 | Freewheeling diode | 1N5822 Schottky (40V/3A) | Inductor current path when MOSFET off
 | Output capacitor | 100µF / 50V electrolytic | Output ripple smoothing
 | Input capacitors | 100µF + 100nF | Panel voltage stabilisation
-| Voltage divider | R1=18kΩ, R2=3.9kΩ | Scale 21.6V → 4.09V for ADC
+| Voltage divider | R1=20kΩ, R2=4.7kΩ | Scale 21.6V → 4.09V for ADC
 | Display | 16×2 LCD with I2C adapter | Live V/I/P/duty readout 
 | Solar panel | 5W 12V polycrystalline | Power source (Voc=21.6V, Vmpp=17.2V)  
 | Battery | 3S Li-ion (3 × 3.7V = 11.1V nom) | Load / energy storage 
 | Misc | Breadboard, terminals, wire, solder | Assembly 
 
 
-### System Design
+### Key Design decisions
 
-** IRLZ44N ** The IRLZ44N is a logic-level MOSFET ,its gate turns fully ON at 5V, so the Arduino drives it directly. No IR2104 gate driver IC needed, saving ₹120 and significant wiring complexity. At our 0.3A operating current the IRLZ44N runs completely cold (Rds_on = 22mΩ vs effective ~200mΩ when IRF540N is partially driven at 5V).
+**IRLZ44N:** The IRLZ44N is a logic-level MOSFET ,its gate turns fully ON at 5V, so the Arduino drives it directly. No IR2104 gate driver IC needed, saving ₹120 and significant wiring complexity. At our 0.3A operating current the IRLZ44N runs completely cold (Rds_on = 22mΩ vs effective ~200mΩ when IRF540N is partially driven at 5V).
 
-**TWo input capacitors** The 100µF electrolytic handles bulk energy storage, supplying burst current during each 50kHz switch-on. The 100nF ceramic kills high-frequency spikes the electrolytic is too slow to catch (due to internal inductance). Without these, the 50kHz switching noise corrupts INA219 readings and the MPPT algorithm tracks garbage.
+**TWo input capacitors:** The 100µF electrolytic handles bulk energy storage, supplying burst current during each 50kHz switch-on. The 100nF ceramic kills high-frequency spikes the electrolytic is too slow to catch (due to internal inductance). Without these, the 50kHz switching noise corrupts INA219 readings and the MPPT algorithm tracks garbage.
 
-** R1=20kΩ, R2=3.9kΩ for the voltage divider?** The panel Voc can reach 23V worst case. The original 10kΩ+4.7kΩ divider would output 6.9V — exceeding the Arduino's 5V ADC limit and damaging the pin. 18kΩ+3.9kΩ scales 23V to 4.09V, safe under all conditions.
+**R1=20kΩ, R2=4.7kΩ for the voltage divider:** The panel Voc can reach 23V worst case. The original 10kΩ+4.7kΩ divider would output 6.9V — exceeding the Arduino's 5V ADC limit and damaging the pin. 18kΩ+3.9kΩ scales 23V to 4.09V, safe under all conditions.
 
 ---
 
@@ -193,14 +193,12 @@ time_ms,volt_V,curr_A,power_W,duty_pct,batt_V,source
 
 - [x] Buck converter hardware (IRLZ44N + 100µH + 1N5822 + 100µF)
 - [x] INA219 current sensing with 0.5Ω shunt correction
-- [x] Voltage divider (18kΩ + 3.9kΩ) with 5V ADC safety margin
+- [x] Voltage divider (20kΩ + 4.7kΩ) with 5V ADC safety margin
 - [x] 50kHz PWM via Timer1 reconfiguration
 - [x] Non-blocking P&O MPPT algorithm (100ms loop)
-- [x] Input capacitors (100µF + 100nF) for noise suppression
 - [x] 16×2 LCD I2C display with live V/I/P/duty readout
 - [x] 3S Li-ion battery protection (12.6V cutoff, 9.0V low)
 - [x] CSV data logging over serial (training data for Phase 2)
-- [x] Transfer from breadboard to perf board
 
 ### Phase 2 — TinyML Integration 🔄 In Progress
 
@@ -213,15 +211,6 @@ time_ms,volt_V,curr_A,power_W,duty_pct,batt_V,source
 - [ ] A/B efficiency comparison: P&O vs TinyML under same conditions
 - [ ] Live WiFi dashboard (ESP32 AP mode, accessible from any browser)
 
-### Phase 3 — Possible future upgrades
-
-- [ ] Custom PCB design (EasyEDA → JLCPCB fabrication)
-- [ ] Temperature compensation for battery charging (NTC thermistor)
-- [ ] Partial shading detection and global MPP tracking
-- [ ] Bluetooth BLE logging to mobile app
-- [ ] Over-the-air (OTA) firmware updates via ESP32
-- [ ] Current sensing on battery side (second INA219) for SoC estimation
-- [ ] Publish efficiency comparison results as a paper (IJERT / IRJET)
 
 ---
 
