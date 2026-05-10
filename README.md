@@ -53,15 +53,13 @@ This project combines power electronics, embedded systems, and TinyML for low-co
 | Misc | Breadboard, terminals, wire, solder | Assembly 
 
 
-### Key design decisions
+### System Design
 
-**Why IRLZ44N instead of IRF540N?** The IRLZ44N is a logic-level MOSFET — its gate turns fully ON at 5V, so the Arduino drives it directly. No IR2104 gate driver IC needed, saving ₹120 and significant wiring complexity. At our 0.3A operating current the IRLZ44N runs completely cold (Rds_on = 22mΩ vs effective ~200mΩ when IRF540N is partially driven at 5V).
+** IRLZ44N ** The IRLZ44N is a logic-level MOSFET ,its gate turns fully ON at 5V, so the Arduino drives it directly. No IR2104 gate driver IC needed, saving ₹120 and significant wiring complexity. At our 0.3A operating current the IRLZ44N runs completely cold (Rds_on = 22mΩ vs effective ~200mΩ when IRF540N is partially driven at 5V).
 
-**Why two input capacitors?** The 100µF electrolytic handles bulk energy storage, supplying burst current during each 50kHz switch-on. The 100nF ceramic kills high-frequency spikes the electrolytic is too slow to catch (due to internal inductance). Without these, the 50kHz switching noise corrupts INA219 readings and the MPPT algorithm tracks garbage.
+**TWo input capacitors** The 100µF electrolytic handles bulk energy storage, supplying burst current during each 50kHz switch-on. The 100nF ceramic kills high-frequency spikes the electrolytic is too slow to catch (due to internal inductance). Without these, the 50kHz switching noise corrupts INA219 readings and the MPPT algorithm tracks garbage.
 
-**Why 0.5Ω shunt instead of 0.1Ω?** The standard 0.1Ω precision shunt is hard to source locally. Two 1Ω carbon film resistors in parallel give 0.5Ω — at 0.29A this produces a 145mV drop, actually cleaner for the INA219 to read than 29mV would be. The INA219 calibration is corrected in firmware.
-
-**Why R1=18kΩ, R2=3.9kΩ for the voltage divider?** The panel Voc can reach 23V worst case. The original 10kΩ+4.7kΩ divider would output 6.9V — exceeding the Arduino's 5V ADC limit and damaging the pin. 18kΩ+3.9kΩ scales 23V to 4.09V, safe under all conditions.
+** R1=20kΩ, R2=3.9kΩ for the voltage divider?** The panel Voc can reach 23V worst case. The original 10kΩ+4.7kΩ divider would output 6.9V — exceeding the Arduino's 5V ADC limit and damaging the pin. 18kΩ+3.9kΩ scales 23V to 4.09V, safe under all conditions.
 
 ---
 
@@ -85,10 +83,10 @@ This is derived from volt-second balance on the inductor: in steady state, the f
 ```
 Switching frequency:  fsw = 50 kHz  (Timer1 reconfigured from default 490Hz)
 Duty cycle range:     20% – 90%     (safety clamp in firmware)
-Min inductance:       L = (Vin-Vout)×D / (fsw×ΔIL) = 68µH  →  use 100µH ✓
-Min capacitance:      C = ΔIL / (8×fsw×ΔVout) = 4µF        →  use 100µF ✓
-MOSFET Vds rating:    ≥ 1.5 × Voc = 34.5V  →  IRLZ44N 55V ✓
-Diode reverse V:      ≥ 1.5 × Voc = 34.5V  →  1N5822 40V  ✓
+Min inductance:       L = (Vin-Vout)×D / (fsw×ΔIL) = 68µH  →  using 100µH 
+Min capacitance:      C = ΔIL / (8×fsw×ΔVout) = 4µF        →  using 100µF 
+MOSFET Vds rating:    ≥ 1.5 × Voc = 34.5V  →  IRLZ44N 55V 
+Diode reverse V:      ≥ 1.5 × Voc = 34.5V  →  1N5822 40V  
 ```
 
 
@@ -102,12 +100,12 @@ The firmware is structured in non-blocking layers — all tasks use `millis()` t
 
 ```
 loop()
-  ├── mpptStep()      every 100ms  — P&O algorithm, updates PWM duty
-  ├── uartLog()       every 250ms  — CSV row to serial (for ESP32 / logging)
-  └── updateDisplay() every 600ms  — LCD refresh
+  ├── mpptStep()      every 100ms  , P&O algorithm, updates PWM duty
+  ├── uartLog()       every 250ms  , CSV row to serial (for ESP32 / logging)
+  └── updateDisplay() every 600ms  , LCD refresh
 ```
 
-**P&O algorithm core (10 lines of real logic):**
+**P&O algorithm core :**
 
 ```cpp
 float dP = panelPower - prevPower;
@@ -115,18 +113,18 @@ int   dD = dutyCycle  - prevDuty;
 
 if (abs(dP) > 0.005) {       // ignore changes below 5mW noise floor
     if (dP > 0)
-        direction = (dD >= 0) ? 1 : -1;   // power up → keep direction
+        direction = (dD >= 0) ? 1 : -1;   // power up , keep direction
     else
-        direction = (dD >= 0) ? -1 : 1;   // power down → reverse
+        direction = (dD >= 0) ? -1 : 1;   // power down , reverse
 }
-setDuty(dutyCycle + direction * PERTURB_STEP);  // PERTURB_STEP = 2
+setDuty(dutyCycle + direction * PERTURB_STEP);  // PERTURB_STEP = 3
 ```
 
 **Timer1 reconfiguration for 50kHz:**
 
 ```cpp
-// Default Arduino PWM is 490Hz — needs a 20mH inductor (impractical)
-// 50kHz allows 100µH inductor — small, cheap, available
+// Default Arduino PWM is 490Hz , needs a 20mH inductor (impractical)
+// 50kHz allows 100µH inductor , small, cheap, available
 TCCR1A = _BV(COM1A1) | _BV(WGM11);
 TCCR1B = _BV(WGM13)  | _BV(WGM12) | _BV(CS10);
 ICR1   = 319;   // 16MHz / 320 = 50kHz
